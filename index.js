@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const port = 3001;
+const userRoutes = require("./src/routes/users")
 
 const randomInt = (max) => Math.floor(Math.random() * max);
 
@@ -9,6 +10,8 @@ app.use((req, res, next) => {
     req.arithmetic_calculation = randomInt(111) * randomInt(200); 
     next();
 });
+//New middleware 
+app.use(express.json())
 
 // Route handler
 app.get("/", (req, res) => {
@@ -20,3 +23,6 @@ app.get("/", (req, res) => {
 app.listen(port, () => {
     console.log(`Example app running at http://localhost:${port}`);
 });
+
+//ROUTES
+app.use("/api/users", userRoutes)

@@ -18,6 +18,10 @@ const userSchema = new Schema({
         type: String,
         required: true
     },
+    password: {
+        type: String,
+        required: true
+    },
     role: {
         type: String,
         required: true
@@ -25,7 +29,8 @@ const userSchema = new Schema({
     inventory: {
         type: Array,
         required: false
-    }
-})
+    }},
+    {timestamps: true}    
+)
 
 module.exports = mongoose.model('userSchema', userSchema);

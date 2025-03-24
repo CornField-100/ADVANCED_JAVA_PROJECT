@@ -1,6 +1,6 @@
-const jwt = require("jsonwebtoken")
-require("dotenv").config()
-const User = require("../models/userModels")
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
+const User = require("../models/userModels");
 
 exports.verifyToken = async (req, res, next) => {
     //Check if the authorization header exists
@@ -14,7 +14,7 @@ exports.verifyToken = async (req, res, next) => {
         req.userId = decodedToken.userId
 
         //Check if the user is in the db
-        const user = await User.findById(userId)
+        const user = await User.findById(req.userId)
 
         if (!user) {
             return res.status(404).json({ message: "User not found "})

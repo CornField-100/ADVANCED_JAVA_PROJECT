@@ -1,2 +1,12 @@
+# Node modules
 node_modules/
-.nyc_output/
+ 
+# Environment variables
+.env
+.env.test
+.env.production
+ 
+# Compiled output
+/dist
+/build
+/out

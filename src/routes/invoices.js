@@ -13,10 +13,10 @@ const {
 router.post("/createInvoice", verifyToken, createInvoice);
 
 // Get all invoices (admin only ideally — for now no restriction)
-router.get("/getAllInvoice", getAllInvoices);
+router.get("/getAllInvoice",verifyToken, getAllInvoices);
 
 // Get invoice by ID
-router.get("/:id", getInvoiceById);
+router.get("/:id",verifyToken, getInvoiceById);
 
 // Get current user's invoices
 router.get("/user/mine", verifyToken, getMyInvoices);

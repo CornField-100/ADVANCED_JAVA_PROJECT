@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const port = 3001;
 const userRoutes = require("./routes/users")
+const productRoutes = require("./routes/products")
+const invoiceRoutes = require("./routes/invoices");
 const path = require("path")
 
 const randomInt = (max) => Math.floor(Math.random() * max);
@@ -33,4 +35,6 @@ app.listen(port, () => {
 });
 
 //ROUTES
-app.use("/api/users", userRoutes)
+app.use("/api/users", userRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/invoices", invoiceRoutes);

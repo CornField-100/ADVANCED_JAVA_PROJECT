@@ -13,7 +13,7 @@ const {
 router.post("/addProduct", verifyToken, addProduct);
 
 // Get all products
-router.get("/getAllProduct",verifyToken, getAllProducts);
+router.get("/getAllProduct", getAllProducts);
 
 // Get product by ID
 router.get("/:id",verifyToken, getProductById);

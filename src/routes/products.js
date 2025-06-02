@@ -6,7 +6,8 @@ const {
     getAllProducts,
     getProductById,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    searchProducts
 } = require("../controllers/productController");
 
 // Create a product

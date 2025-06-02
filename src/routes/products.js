@@ -24,4 +24,7 @@ router.put("/:id",verifyToken, updateProduct);
 // Delete product
 router.delete("/:id",verifyToken, deleteProduct);
 
+// Search products by brand or model
+router.get("/search", searchProducts);
+
 module.exports = router;

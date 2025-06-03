@@ -56,6 +56,10 @@ exports.deleteProduct = async (req, res) => {
 
 // Search products by brand or model
 exports.searchProducts = async (req, res) => {
+  console.log("🔍 SEARCH REQUEST RECEIVED");
+  console.log("Headers:", req.headers);
+  console.log("Query:", req.query);
+
   const { query } = req.query;
 
   if (!query) {
@@ -72,6 +76,7 @@ exports.searchProducts = async (req, res) => {
 
     res.status(200).json(results);
   } catch (err) {
+    console.error("Search error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };

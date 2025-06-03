@@ -1,38 +1,44 @@
 const express = require("express");
 const app = express();
 const port = 3001;
-const userRoutes = require("./routes/users")
-const productRoutes = require("./routes/products")
-const invoiceRoutes = require("./routes/invoices");
 const path = require("path");
 const cors = require("cors");
 
-const randomInt = (max) => Math.floor(Math.random() * max);
+const userRoutes = require("./routes/users");
+const productRoutes = require("./routes/products");
+const invoiceRoutes = require("./routes/invoices");
+const connectDB = require("./utils/db");
 
-//Connect to DB
-const connectDB = require("./utils/db")
+const allowedOrigins = [
+  "https://frontendjava.netlify.app",
+  "http://localhost:5173", // Optional: remove if not needed
+];
 
-//New middleware 
-app.use(express.json())
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-//image folder middleware
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// cors middleware
-app.use(cors({
-  origin: "https://frontendjava.netlify.app",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+connectDB();
 
-connectDB()
-
-// Start server
 app.listen(port, () => {
-    console.log(`Example app running at http://localhost:${port}`);
+  console.log(`✅ Server running at http://localhost:${port}`);
 });
 
-//ROUTES
+// 📦 Routes
 app.use("/api/users", userRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/invoices", invoiceRoutes);

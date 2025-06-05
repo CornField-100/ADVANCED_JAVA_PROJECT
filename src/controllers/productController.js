@@ -1,6 +1,5 @@
 const Product = require("../models/productModels");
 
-// Add a new product
 exports.addProduct = async (req, res) => {
     try {
         const product = new Product(req.body);
@@ -11,7 +10,6 @@ exports.addProduct = async (req, res) => {
     }
 };
 
-// Get all products
 exports.getAllProducts = async (req, res) => {
     try {
         const products = await Product.find();
@@ -21,7 +19,6 @@ exports.getAllProducts = async (req, res) => {
     }
 };
 
-// Get single product by ID
 exports.getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
@@ -32,7 +29,6 @@ exports.getProductById = async (req, res) => {
     }
 };
 
-// Update product
 exports.updateProduct = async (req, res) => {
     try {
         const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -43,7 +39,6 @@ exports.updateProduct = async (req, res) => {
     }
 };
 
-// Delete product
 exports.deleteProduct = async (req, res) => {
     try {
         const deleted = await Product.findByIdAndDelete(req.params.id);
@@ -54,7 +49,7 @@ exports.deleteProduct = async (req, res) => {
     }
 };
 
-// Search products by brand or model
+
 exports.searchProducts = async (req, res) => {
   console.log("🔍 SEARCH REQUEST RECEIVED");
   console.log("Headers:", req.headers);
@@ -69,8 +64,7 @@ exports.searchProducts = async (req, res) => {
   try {
     const results = await Product.find({
       $or: [
-        { brand: { $regex: query, $options: "i" } },
-        { Model: { $regex: query, $options: "i" } },
+        { brand: { $regex: query, $options: "i" } }
       ],
     });
 

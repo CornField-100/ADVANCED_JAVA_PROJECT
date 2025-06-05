@@ -10,22 +10,16 @@ const {
     searchProducts
 } = require("../controllers/productController");
 
-// Create a product
+router.get("/search", searchProducts);
+
 router.post("/addProduct", verifyToken, addProduct);
 
-// Get all products
 router.get("/getAllProduct", getAllProducts);
 
-// Get product by ID
-router.get("/:id",verifyToken, getProductById);
+router.get("/:id", verifyToken, getProductById);
 
-// Update product
-router.put("/:id",verifyToken, updateProduct);
+router.put("/:id", verifyToken, updateProduct);
 
-// Delete product
-router.delete("/:id",verifyToken, deleteProduct);
-
-// Search products by brand or model
-router.get("/search", searchProducts);
+router.delete("/:id", verifyToken, deleteProduct);
 
 module.exports = router;

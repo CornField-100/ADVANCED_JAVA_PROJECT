@@ -3,10 +3,14 @@ const app = express();
 const port = 3001;
 const path = require("path");
 const cors = require("cors");
+const dotenv = require("dotenv");
+
+dotenv.config();
 
 const userRoutes = require("./routes/users");
 const productRoutes = require("./routes/products");
 const invoiceRoutes = require("./routes/invoices");
+const orderRoutes = require("./routes/order");
 const connectDB = require("./utils/db");
 const allowedOrigins = [
   "http://localhost:5173",
@@ -21,7 +25,6 @@ app.use(
         callback(null, true);
       } else {
         console.log("❌ Blocked by CORS:", origin);
-
         callback(new Error("Not allowed by CORS"));
       }
     },
@@ -38,6 +41,8 @@ connectDB();
 app.use("/api/users", userRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/invoices", invoiceRoutes);
+app.use("/api/orders", orderRoutes);
+
 app.use((err, req, res, next) => {
   console.error("Express error handler:", err.message);
   res.status(500).json({ error: err.message });

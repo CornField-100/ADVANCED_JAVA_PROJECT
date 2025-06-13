@@ -5,7 +5,7 @@ const Product = require("../models/productModels");
 exports.createInvoice = async (req, res) => {
     try {
         const { products } = req.body;
-        const userId = req.userId; // From verifyToken middleware
+        const userId = req.userId; 
 
         let total = 0;
         for (const item of products) {
@@ -19,17 +19,14 @@ exports.createInvoice = async (req, res) => {
             total += product.price * item.quantity;
         }
 
-        // Create invoice
         const invoice = new Invoice({
             user: userId,
             products,
             total
         });
 
-        // Save invoice
         await invoice.save();
 
-        // Update stock
         for (const item of products) {
             await Product.findByIdAndUpdate(item.product, {
                 $inc: { stock: -item.quantity }
@@ -42,7 +39,6 @@ exports.createInvoice = async (req, res) => {
     }
 };
 
-// Get all invoices (admin or yourself)
 exports.getAllInvoices = async (req, res) => {
     try {
         const invoices = await Invoice.find()
@@ -54,7 +50,6 @@ exports.getAllInvoices = async (req, res) => {
     }
 };
 
-// Get invoice by ID
 exports.getInvoiceById = async (req, res) => {
     try {
         const invoice = await Invoice.findById(req.params.id)
@@ -63,14 +58,12 @@ exports.getInvoiceById = async (req, res) => {
 
         if (!invoice) return res.status(404).json({ message: "Invoice not found" });
 
-        // Optionally restrict if not admin/user owner
         res.status(200).json(invoice);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-// Get invoices by current user
 exports.getMyInvoices = async (req, res) => {
     try {
         const invoices = await Invoice.find({ user: req.userId })

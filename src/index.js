@@ -11,17 +11,21 @@ const userRoutes = require("./routes/users");
 const productRoutes = require("./routes/products");
 const invoiceRoutes = require("./routes/invoices");
 const orderRoutes = require("./routes/order");
+const reviewRoutes = require("./routes/reviews"); // <-- Added this line
 const connectDB = require("./utils/db");
+
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://frontendjava.netlify.app",
+  "https://advanced-java-project.onrender.com",
 ];
-
 app.use(
   cors({
     origin: (origin, callback) => {
       console.log("Request Origin:", origin);
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (process.env.NODE_ENV === 'production' && (!origin || !allowedOrigins.includes(origin))) {
+        console.log("❌ Blocked by CORS (production):", origin);
+        callback(new Error("Not allowed by CORS"));
+      } else if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         console.log("❌ Blocked by CORS:", origin);
@@ -42,6 +46,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes); 
 
 app.use((err, req, res, next) => {
   console.error("Express error handler:", err.message);

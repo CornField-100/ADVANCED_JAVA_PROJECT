@@ -14,7 +14,7 @@ const {
 router.get("/search", searchProducts);
 
 // Add product (protected)
-router.post("/addProduct", verifyToken, addProduct);
+router.post("/addProduct", addProduct);
 
 // Get all products (public)
 router.get("/getAllProduct", getAllProducts);

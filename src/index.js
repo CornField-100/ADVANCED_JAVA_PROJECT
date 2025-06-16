@@ -17,6 +17,7 @@ const connectDB = require("./utils/db");
 const allowedOrigins = [
   "http://localhost:5173",
   "https://advanced-java-project.onrender.com",
+  "https://frontendjava.netlify.app",
 ];
 app.use(
   cors({

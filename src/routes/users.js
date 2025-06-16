@@ -14,7 +14,7 @@ router.post("/signup", hashPassword, userSignUp)
 
 // Update user route
 // The route is protected by the verifyToken middleware
-router.put("/userUpdate", verifyToken, upload.single("image"), (req, res) => {
+router.put("/userUpdate", verifyToken, upload.single("image"), sharpMiddleware(), (req, res) => {
   
     if (!req.file) {
      return res.status(400).json({ error: "Error uploading the file. Wrong format ?" })

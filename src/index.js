@@ -1,36 +1,59 @@
 const express = require("express");
 const app = express();
 const port = 3001;
-const userRoutes = require("./routes/users")
-const path = require("path")
+const path = require("path");
+const cors = require("cors");
+const dotenv = require("dotenv");
 
-const randomInt = (max) => Math.floor(Math.random() * max);
+dotenv.config();
 
-//Connect to DB
-const connectDB = require("./utils/db")
+const userRoutes = require("./routes/users");
+const productRoutes = require("./routes/products");
+const invoiceRoutes = require("./routes/invoices");
+const orderRoutes = require("./routes/order");
+const reviewRoutes = require("./routes/reviews"); // <-- Added this line
+const connectDB = require("./utils/db");
 
-//New middleware 
-app.use(express.json())
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://advanced-java-project.onrender.com",
+  "https://frontendjava.netlify.app",
+];
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      console.log("Request Origin:", origin);
+      if (process.env.NODE_ENV === 'production' && (!origin || !allowedOrigins.includes(origin))) {
+        console.log("❌ Blocked by CORS (production):", origin);
+        callback(new Error("Not allowed by CORS"));
+      } else if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-//image folder middleware
-app.use("/uploads", express.static(path.join(__dirname, "uploads")))
+app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-// cors middleware
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header(
-        "Access-Control-Allow-Headers",
-        "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    )
-    next()
-})
+connectDB();
 
-connectDB()
+app.use("/api/users", userRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/invoices", invoiceRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes); 
 
-// Start server
-app.listen(port, () => {
-    console.log(`Example app running at http://localhost:${port}`);
+app.use((err, req, res, next) => {
+  console.error("Express error handler:", err.message);
+  res.status(500).json({ error: err.message });
 });
 
-//ROUTES
-app.use("/api/users", userRoutes)
+app.listen(port, () => {
+  console.log(`✅ Server running at http://localhost:${port}`);
+});

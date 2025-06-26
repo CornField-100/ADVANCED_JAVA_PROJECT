@@ -11,7 +11,8 @@ const userRoutes = require("./routes/users");
 const productRoutes = require("./routes/products");
 const invoiceRoutes = require("./routes/invoices");
 const orderRoutes = require("./routes/order");
-const reviewRoutes = require("./routes/reviews"); // <-- Added this line
+const reviewRoutes = require("./routes/reviews");
+const cartRoutes = require("./routes/cart");
 const connectDB = require("./utils/db");
 
 const allowedOrigins = [
@@ -23,7 +24,10 @@ app.use(
   cors({
     origin: (origin, callback) => {
       console.log("Request Origin:", origin);
-      if (process.env.NODE_ENV === 'production' && (!origin || !allowedOrigins.includes(origin))) {
+      if (
+        process.env.NODE_ENV === "production" &&
+        (!origin || !allowedOrigins.includes(origin))
+      ) {
         console.log("❌ Blocked by CORS (production):", origin);
         callback(new Error("Not allowed by CORS"));
       } else if (!origin || allowedOrigins.includes(origin)) {
@@ -47,7 +51,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/reviews", reviewRoutes); 
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/cart", cartRoutes);
 
 app.use((err, req, res, next) => {
   console.error("Express error handler:", err.message);

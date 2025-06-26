@@ -2,10 +2,18 @@ const Product = require("../models/productModels");
 
 exports.addProduct = async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const productData = req.body;
+
+    // If an image is uploaded, add its path to the product data
+    if (req.file) {
+      productData.imageUrl = req.file.path;
+    }
+
+    const product = new Product(productData);
     await product.save();
     res.status(201).json(product);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -31,12 +39,20 @@ exports.getProductById = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    const updateData = req.body;
+
+    // If a new image is uploaded, add its path to the update data
+    if (req.file) {
+      updateData.imageUrl = req.file.path;
+    }
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
     if (!updated) return res.status(404).json({ message: "Product not found" });
     res.status(200).json(updated);
   } catch (err) {
+    console.error(err);
     res.status(400).json({ error: err.message });
   }
 };
@@ -61,12 +77,14 @@ exports.searchProducts = async (req, res) => {
     const results = await Product.find({
       $or: [
         { brand: { $regex: query, $options: "i" } },
-        { Model: { $regex: query, $options: "i" } },
+        { model: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
       ],
-    }).select("_id brand Model price stock imageUrl");
+    }).select("_id brand model price stock imageUrl description");
 
     res.status(200).json(results);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };

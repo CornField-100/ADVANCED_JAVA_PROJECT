@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { verifyToken, isAdmin } = require("../middleware/auth");
+const { validateProductInput } = require("../middleware/validation");
 const upload = require("../config/multerConfig");
 const sharpMiddleware = require("../middleware/sharpMiddleware");
 const {
@@ -22,6 +23,7 @@ router.post(
   isAdmin,
   upload.single("image"),
   sharpMiddleware(),
+  validateProductInput,
   addProduct
 );
 
@@ -31,6 +33,9 @@ router.get("/getAllProduct", getAllProducts);
 // Get a single product by ID (public)
 router.get("/:id", getProductById);
 
+// Get product for editing (admin only) - returns more detailed info
+router.get("/:id/edit", verifyToken, isAdmin, getProductById);
+
 // Update product (protected - admin only)
 router.put(
   "/:id",
@@ -38,6 +43,7 @@ router.put(
   isAdmin,
   upload.single("image"),
   sharpMiddleware(),
+  validateProductInput,
   updateProduct
 );
 

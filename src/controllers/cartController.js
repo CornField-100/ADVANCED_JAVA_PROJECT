@@ -1,4 +1,6 @@
 const User = require("../models/userModels");
+const Product = require("../models/productModels");
+const mongoose = require("mongoose");
 
 // Get user's cart
 exports.getCart = async (req, res) => {
@@ -9,7 +11,7 @@ exports.getCart = async (req, res) => {
     }
     res.status(200).json(user.cart);
   } catch (err) {
-    console.error(err);
+    console.error("Get cart error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -17,7 +19,31 @@ exports.getCart = async (req, res) => {
 // Add to cart
 exports.addToCart = async (req, res) => {
   const { productId, quantity } = req.body;
+
   try {
+    // Validate input
+    if (!productId || !quantity) {
+      return res
+        .status(400)
+        .json({ message: "Product ID and quantity are required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product ID format" });
+    }
+
+    if (quantity <= 0) {
+      return res
+        .status(400)
+        .json({ message: "Quantity must be greater than 0" });
+    }
+
+    // Check if product exists
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -38,7 +64,7 @@ exports.addToCart = async (req, res) => {
     await user.save();
     res.status(200).json(user.cart);
   } catch (err) {
-    console.error(err);
+    console.error("Add to cart error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -47,6 +73,10 @@ exports.addToCart = async (req, res) => {
 exports.removeFromCart = async (req, res) => {
   const { productId } = req.params;
   try {
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ message: "Invalid product ID format" });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });

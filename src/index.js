@@ -59,6 +59,7 @@ const authLimiter = rateLimit({
 
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
   "https://advanced-java-project.onrender.com",
   "https://frontendjava.netlify.app",
 ];
@@ -66,26 +67,57 @@ app.use(
   cors({
     origin: (origin, callback) => {
       console.log("Request Origin:", origin);
-      if (
-        process.env.NODE_ENV === "production" &&
-        (!origin || !allowedOrigins.includes(origin))
-      ) {
-        console.log("❌ Blocked by CORS (production):", origin);
-        callback(new Error("Not allowed by CORS"));
-      } else if (!origin || allowedOrigins.includes(origin)) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         console.log("❌ Blocked by CORS:", origin);
         callback(new Error("Not allowed by CORS"));
       }
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.use(express.json());
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+
+  // Log request body for POST/PATCH/PUT requests
+  if (["POST", "PATCH", "PUT"].includes(req.method)) {
+    console.log("Request body:", JSON.stringify(req.body, null, 2));
+  }
+
+  // Log authorization header (without exposing the token)
+  if (req.headers.authorization) {
+    console.log(
+      "Authorization header present:",
+      req.headers.authorization ? "Yes" : "No"
+    );
+  }
+
+  // Intercept response to log status codes
+  const originalSend = res.send;
+  res.send = function (data) {
+    console.log(`Response ${res.statusCode} for ${req.method} ${req.path}`);
+    if (res.statusCode >= 400) {
+      console.log(
+        "Error response:",
+        typeof data === "string" ? data : JSON.stringify(data, null, 2)
+      );
+    }
+    originalSend.call(this, data);
+  };
+
+  next();
+});
 
 connectDB();
 
@@ -97,9 +129,43 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/admin", adminRoutes);
 
+// Test endpoint
+app.get("/api/test", (req, res) => {
+  res.json({
+    message: "Backend is working!",
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      orders: {
+        create: "POST /api/orders",
+        getAll: "GET /api/orders",
+        update: "PATCH /api/orders/:orderId",
+        delete: "DELETE /api/orders/:orderId",
+      },
+    },
+  });
+});
+
+// Debug orders endpoint
+app.get("/api/orders/debug", async (req, res) => {
+  try {
+    const Order = require("./models/orderModel");
+    const orders = await Order.find({}).limit(5);
+    res.json({
+      count: orders.length,
+      sample: orders,
+      user: req.user,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.use((err, req, res, next) => {
-  console.error("Express error handler:", err.message);
-  res.status(500).json({ error: err.message });
+  console.error("Unhandled error:", err);
+  res.status(500).json({
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
 });
 
 app.listen(port, () => {

@@ -3,7 +3,24 @@ const mongoose = require("mongoose");
 
 exports.addProduct = async (req, res) => {
   try {
-    const productData = req.body;
+    console.log("Creating product with data:", req.body);
+    console.log("File uploaded:", req.file ? req.file.path : "No file");
+
+    const productData = { ...req.body };
+
+    // The frontend might send 'Model' instead of 'model'. This handles that case.
+    if (productData.Model && !productData.model) {
+      productData.model = productData.Model;
+      delete productData.Model;
+    }
+
+    // Convert string numbers to actual numbers
+    if (productData.price) {
+      productData.price = Number(productData.price);
+    }
+    if (productData.stock) {
+      productData.stock = Number(productData.stock);
+    }
 
     // If an image is uploaded, add its path to the product data
     if (req.file) {
@@ -12,10 +29,35 @@ exports.addProduct = async (req, res) => {
 
     const product = new Product(productData);
     await product.save();
-    res.status(201).json(product);
+
+    console.log("Product created successfully:", product._id);
+    res.status(201).json({
+      message: "Product created successfully",
+      product: product,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(400).json({ error: err.message });
+    console.error("Add product error:", err);
+
+    // Handle validation errors specifically
+    if (err.name === "ValidationError") {
+      return res.status(400).json({
+        error: "Validation failed",
+        details: Object.values(err.errors).map((e) => e.message),
+      });
+    }
+
+    // Handle duplicate key errors
+    if (err.code === 11000) {
+      return res.status(409).json({
+        error: "Duplicate entry",
+        message: "A product with this information already exists",
+      });
+    }
+
+    res.status(500).json({
+      error: "Internal server error",
+      message: "Failed to create product",
+    });
   }
 };
 

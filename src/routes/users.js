@@ -61,10 +61,6 @@ router.put(
 
 router.get("/getuser", verifyToken, getUser);
 
-// User dashboard routes
-router.get("/dashboard", verifyToken, getUserDashboard);
-router.get("/orders", verifyToken, getUserOrders);
-
 // Admin-only user management routes
 router.get("/", verifyToken, isAdmin, getAllUsers); // GET /api/users
 router.post(

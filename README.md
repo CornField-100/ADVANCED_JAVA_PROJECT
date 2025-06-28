@@ -36,7 +36,7 @@ npm install
 Create a new file called `.env` in the `src/` folder:
 
 ```env
-DB_CONNECTION=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/ecommerce?retryWrites=true&w=majority
+DB_CONNECTION=mongodb+srv://hmajzoub12:BUx5eWvTkUKmZpDv@cluster3.txaovrq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster3
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=YOUR_NEO4J_PASSWORD

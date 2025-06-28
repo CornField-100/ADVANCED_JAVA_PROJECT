@@ -1,6 +1,7 @@
 const User = require("../models/userModels");
 const Product = require("../models/productModels");
 const Invoice = require("../models/invoiceModel");
+const bcrypt = require('bcrypt');
 
 // Get admin dashboard statistics
 exports.getDashboardStats = async (req, res) => {
@@ -59,6 +60,9 @@ exports.getAllUsers = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
     const role = req.query.role || "";
+    const status = req.query.status || "";
+    const sortBy = req.query.sortBy || "createdAt";
+    const sortOrder = req.query.sortOrder || "desc";
 
     const skip = (page - 1) * limit;
 
@@ -76,17 +80,31 @@ exports.getAllUsers = async (req, res) => {
       query.role = role;
     }
 
+    if (status) {
+      query.status = status;
+    }
+
+    const sortOptions = {};
+    sortOptions[sortBy] = sortOrder === "desc" ? -1 : 1;
+
     const [users, totalUsers] = await Promise.all([
       User.find(query)
         .select("-password")
-        .sort({ createdAt: -1 })
+        .sort(sortOptions)
         .skip(skip)
         .limit(limit),
       User.countDocuments(query),
     ]);
 
+    // Add formatted creation date for easier reading
+    const usersWithFormattedDates = users.map(user => ({
+      ...user.toObject(),
+      formattedCreatedAt: user.createdAt.toLocaleString(),
+      formattedUpdatedAt: user.updatedAt.toLocaleString()
+    }));
+
     res.status(200).json({
-      users,
+      users: usersWithFormattedDates,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalUsers / limit),
@@ -94,6 +112,13 @@ exports.getAllUsers = async (req, res) => {
         hasNext: page * limit < totalUsers,
         hasPrev: page > 1,
       },
+      filters: {
+        search,
+        role,
+        status,
+        sortBy,
+        sortOrder
+      }
     });
   } catch (err) {
     console.error("Get all users error:", err);
@@ -175,6 +200,127 @@ exports.deleteUser = async (req, res) => {
     res.status(200).json({ message: "User deleted successfully" });
   } catch (err) {
     console.error("Delete user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Create new user (admin only)
+exports.createUser = async (req, res) => {
+  try {
+    const { firstName, lastName, email, password, role = "user", status = "active" } = req.body;
+
+    // Validate required fields
+    if (!firstName || !lastName || !email || !password) {
+      return res.status(400).json({ 
+        message: "All fields are required: firstName, lastName, email, password" 
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+
+    // Validate role
+    if (role && !['user', 'admin'].includes(role)) {
+      return res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'" });
+    }
+
+    // Validate status
+    if (status && !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({ message: "Invalid status. Must be 'active' or 'inactive'" });
+    }
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create new user
+    const newUser = new User({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      role,
+      status
+    });
+
+    await newUser.save();
+
+    // Return user without password
+    const userResponse = {
+      _id: newUser._id,
+      firstName: newUser.firstName,
+      lastName: newUser.lastName,
+      email: newUser.email,
+      role: newUser.role,
+      status: newUser.status,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt
+    };
+
+    res.status(201).json({
+      message: "User created successfully",
+      user: userResponse
+    });
+
+  } catch (err) {
+    console.error("Create user error:", err);
+    if (err.code === 11000) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Update user (admin only)
+exports.updateUserAdmin = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { firstName, lastName, email, role, status } = req.body;
+
+    // Prevent self-demotion from admin
+    if (userId === req.user.userId && req.body.role === "user") {
+      return res.status(400).json({ message: "Cannot demote yourself" });
+    }
+
+    // Validate role
+    if (role && !['user', 'admin'].includes(role)) {
+      return res.status(400).json({ message: "Invalid role. Must be 'user' or 'admin'" });
+    }
+
+    // Validate status
+    if (status && !['active', 'inactive'].includes(status)) {
+      return res.status(400).json({ message: "Invalid status. Must be 'active' or 'inactive'" });
+    }
+
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
+    if (status) updateData.status = status;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "User updated successfully",
+      user,
+    });
+  } catch (err) {
+    console.error("Update user error:", err);
+    if (err.code === 11000) {
+      return res.status(400).json({ message: "User with this email already exists" });
+    }
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -376,6 +522,123 @@ exports.getSalesAnalytics = async (req, res) => {
     });
   } catch (err) {
     console.error("Get sales analytics error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Get user creation statistics
+exports.getUserCreationStats = async (req, res) => {
+  try {
+    const { period } = req.query; // 'week', 'month', 'year'
+
+    let dateFilter = {};
+    const now = new Date();
+
+    switch (period) {
+      case "week":
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+          },
+        };
+        break;
+      case "month":
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(now.getFullYear(), now.getMonth(), 1),
+          },
+        };
+        break;
+      case "year":
+        dateFilter = {
+          createdAt: {
+            $gte: new Date(now.getFullYear(), 0, 1),
+          },
+        };
+        break;
+      default:
+        dateFilter = {};
+    }
+
+    const userCreationStats = await User.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+            day: { $dayOfMonth: "$createdAt" },
+          },
+          totalUsers: { $sum: 1 },
+          usersByRole: {
+            $push: "$role"
+          }
+        },
+      },
+      {
+        $addFields: {
+          adminCount: {
+            $size: {
+              $filter: {
+                input: "$usersByRole",
+                cond: { $eq: ["$$this", "admin"] }
+              }
+            }
+          },
+          regularUserCount: {
+            $size: {
+              $filter: {
+                input: "$usersByRole",
+                cond: { $eq: ["$$this", "user"] }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+    ]);
+
+    const recentlyCreatedUsers = await User.find(dateFilter)
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    const totalStats = await User.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: null,
+          totalUsers: { $sum: 1 },
+          totalAdmins: {
+            $sum: { $cond: [{ $eq: ["$role", "admin"] }, 1, 0] }
+          },
+          totalRegularUsers: {
+            $sum: { $cond: [{ $eq: ["$role", "user"] }, 1, 0] }
+          },
+          activeUsers: {
+            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] }
+          },
+          inactiveUsers: {
+            $sum: { $cond: [{ $eq: ["$status", "inactive"] }, 1, 0] }
+          }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      userCreationStats,
+      recentlyCreatedUsers,
+      totalStats: totalStats[0] || {
+        totalUsers: 0,
+        totalAdmins: 0,
+        totalRegularUsers: 0,
+        activeUsers: 0,
+        inactiveUsers: 0
+      },
+      period,
+    });
+  } catch (err) {
+    console.error("Get user creation stats error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

@@ -1,9 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const { verifyToken, isAdmin } = require("../middleware/auth");
+const { validateUserInput, validatePassword } = require("../middleware/validation");
 const {
   getDashboardStats,
   getAllUsers,
+  createUser,
+  getUserCreationStats,
   promoteToAdmin,
   demoteToUser,
   deleteUser,
@@ -22,6 +25,8 @@ router.get("/analytics", getSalesAnalytics);
 
 // User management routes
 router.get("/users", getAllUsers);
+router.get("/users/stats", getUserCreationStats);
+router.post("/users", validateUserInput, validatePassword, createUser);
 router.put("/users/:userId/promote", promoteToAdmin);
 router.put("/users/:userId/demote", demoteToUser);
 router.delete("/users/:userId", deleteUser);

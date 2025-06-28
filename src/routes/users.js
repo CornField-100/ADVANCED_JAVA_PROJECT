@@ -10,7 +10,15 @@ const {
   getUserDashboard,
   getUserOrders,
 } = require("../controllers/userControllers");
-const { verifyToken } = require("../middleware/auth");
+const {
+  getAllUsers,
+  createUser,
+  updateUserAdmin,
+  promoteToAdmin,
+  demoteToUser,
+  deleteUser,
+} = require("../controllers/adminController");
+const { verifyToken, isAdmin } = require("../middleware/auth");
 const upload = require("../config/multerConfig");
 const sharpMiddleware = require("../middleware/sharpMiddleware");
 const {
@@ -56,5 +64,20 @@ router.get("/getuser", verifyToken, getUser);
 // User dashboard routes
 router.get("/dashboard", verifyToken, getUserDashboard);
 router.get("/orders", verifyToken, getUserOrders);
+
+// Admin-only user management routes
+router.get("/", verifyToken, isAdmin, getAllUsers); // GET /api/users
+router.post(
+  "/",
+  verifyToken,
+  isAdmin,
+  validateUserInput,
+  validatePassword,
+  createUser
+); // POST /api/users
+router.put("/:userId/promote", verifyToken, isAdmin, promoteToAdmin); // PUT /api/users/:userId/promote
+router.put("/:userId/demote", verifyToken, isAdmin, demoteToUser); // PUT /api/users/:userId/demote
+router.patch("/:userId", verifyToken, isAdmin, validateUserInput, updateUserAdmin); // PATCH /api/users/:userId
+router.delete("/:userId", verifyToken, isAdmin, deleteUser); // DELETE /api/users/:userId
 
 module.exports = router;

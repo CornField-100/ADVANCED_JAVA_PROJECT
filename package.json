@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "neo4j-driver": "^5.28.1"
+    "neo4j-driver": "^5.28.1",
+    "sharp": "^0.34.2"
   }
 }

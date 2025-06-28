@@ -36,14 +36,25 @@ npm install
 Create a new file called `.env` in the `src/` folder:
 
 ```env
-DB_CONNECTION=mongodb+srv://your_username:your_password@cluster0.xxxxx.mongodb.net/ecommerce?retryWrites=true&w=majority
+DB_CONNECTION=mongodb+srv://YOUR_USERNAME:YOUR_PASSWORD@cluster0.xxxxx.mongodb.net/ecommerce?retryWrites=true&w=majority
 NEO4J_URI=bolt://localhost:7687
 NEO4J_USER=neo4j
-NEO4J_PASSWORD=Acsdoha2023
-SECRET_TOKEN_KEY=615213301b1d21c0d3445c1cda404351846555bffb5826b86331230670c03f25ace199b864e8229f0b060e3771006fe22b4ef124ac47d6ceb48a3b882b648899
+NEO4J_PASSWORD=YOUR_NEO4J_PASSWORD
+SECRET_TOKEN_KEY=YOUR_GENERATED_JWT_SECRET
 ```
 
-**Replace** `your_username` and `your_password` with your MongoDB credentials!
+**🔐 Generate your JWT secret:**
+
+```bash
+node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+**⚠️ IMPORTANT SECURITY:**
+
+- Replace `YOUR_USERNAME` and `YOUR_PASSWORD` with your MongoDB credentials
+- Replace `YOUR_NEO4J_PASSWORD` with a secure password
+- Replace `YOUR_GENERATED_JWT_SECRET` with the generated secret above
+- **NEVER** commit the `.env` file to Git (it's already in `.gitignore`)
 
 ### **Step 6: Start Local Databases**
 
@@ -64,7 +75,7 @@ services:
       - "7474:7474"
       - "7687:7687"
     environment:
-      - NEO4J_AUTH=neo4j/Acsdoha2023
+      - NEO4J_AUTH=neo4j/YOUR_PASSWORD
     restart: unless-stopped
 ```
 
@@ -122,11 +133,14 @@ You should see:
 
 🎉 **SUCCESS!** Your backend is now running!
 
+## 🐛 **Troubleshooting**
+
 **❌ MongoDB Connection Error:**
 
 - Check your connection string in `.env`
-- Make sure you replaced username/password
+- Make sure you replaced `YOUR_USERNAME` and `YOUR_PASSWORD`
 - Ensure MongoDB Atlas allows connections from your IP
+- Check if your password contains special characters (URL encode them)
 
 **❌ Docker Not Working:**
 
@@ -137,6 +151,9 @@ docker --version
 # Restart containers
 docker-compose down
 docker-compose up -d
+
+# Check container logs
+docker-compose logs
 ```
 
 ## 📁 **Project Structure**

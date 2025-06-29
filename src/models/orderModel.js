@@ -71,7 +71,15 @@ const orderSchema = new Schema(
       default: "paid",
     },
     orderDate: { type: Date, default: Date.now },
+    estimatedDelivery: { type: Date },
     trackingNumber: { type: String },
+    orderNotes: { type: String },
+    adminNotes: { type: String }, // Internal admin notes
+    notifications: [{
+      type: { type: String, enum: ["email", "sms"] },
+      sentAt: { type: Date, default: Date.now },
+      content: { type: String }
+    }],
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
   },

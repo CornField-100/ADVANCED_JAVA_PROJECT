@@ -2,6 +2,10 @@ const express = require("express");
 const {
   createOrder,
   getAllOrders,
+  getOrderById,
+  getOrdersByUser,
+  getOrderStats,
+  sendOrderNotification,
   updateOrderStatus,
   deleteOrder,
 } = require("../controllers/orderController");
@@ -30,9 +34,28 @@ router.get("/debug", verifyToken, async (req, res) => {
   }
 });
 
+// Order Statistics (admin only) - must be before /:orderId routes
+router.get("/stats", verifyToken, isAdmin, getOrderStats);
+
+// Get orders by user (for customer order history)
+router.get("/user/:userId", verifyToken, getOrdersByUser);
+
+// Create new order
 router.post("/", verifyToken, createOrder);
+
+// Get all orders (admin only)
 router.get("/", verifyToken, isAdmin, getAllOrders);
+
+// Get single order by ID
+router.get("/:orderId", verifyToken, getOrderById);
+
+// Send order notification (admin only)
+router.post("/:orderId/notify", verifyToken, isAdmin, sendOrderNotification);
+
+// Update order status (admin only)
 router.patch("/:orderId", verifyToken, isAdmin, updateOrderStatus);
+
+// Delete order (admin only)
 router.delete("/:orderId", verifyToken, isAdmin, deleteOrder);
 
 module.exports = router;

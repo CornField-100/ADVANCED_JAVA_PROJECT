@@ -15,7 +15,7 @@ const {
   updateProductStock,
   getSalesAnalytics,
 } = require("../controllers/adminController");
-const { getAllOrders } = require("../controllers/orderController");
+const { getAllOrders, getOrderById, getOrderStats, updateOrderStatus, deleteOrder, sendOrderNotification } = require("../controllers/orderController");
 
 // All admin routes require authentication and admin role
 router.use(verifyToken, isAdmin);
@@ -41,5 +41,10 @@ router.get("/invoices", getAllInvoicesAdmin);
 
 // Order management routes
 router.get("/orders", getAllOrders);
+router.get("/orders/stats", getOrderStats);
+router.get("/orders/:orderId", getOrderById);
+router.patch("/orders/:orderId", updateOrderStatus);
+router.post("/orders/:orderId/notify", sendOrderNotification);
+router.delete("/orders/:orderId", deleteOrder);
 
 module.exports = router;

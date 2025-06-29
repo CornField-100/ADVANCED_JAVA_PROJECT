@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: lync-project-backend
+    env: node
+    plan: free
+    buildCommand: cd src && npm install
+    startCommand: cd src && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_CONNECTION
+        fromDatabase:
+          name: mongodb-connection
+          property: connectionString
+      - key: NEO4J_URI
+        value: bolt://localhost:7687
+      - key: NEO4J_USER  
+        value: neo4j
+      - key: NEO4J_PASSWORD
+        value: yourpassword123
+      - key: SECRET_TOKEN_KEY
+        value: 01054f263ea99c517ab95b9a19d1dbb35312c8feb2f2526ad63e37e4e1abbff1e8965aa1e3779b67dc9e79fe7626c0a061dfbac6d4194f2ed60527b7de60d268

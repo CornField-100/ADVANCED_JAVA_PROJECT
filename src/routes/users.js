@@ -18,6 +18,7 @@ const {
   demoteToUser,
   deleteUser,
 } = require("../controllers/adminController");
+const { getOrdersByUser } = require("../controllers/orderController");
 const { verifyToken, isAdmin } = require("../middleware/auth");
 const upload = require("../config/multerConfig");
 const sharpMiddleware = require("../middleware/sharpMiddleware");
@@ -60,6 +61,11 @@ router.put(
 );
 
 router.get("/getuser", verifyToken, getUser);
+
+// User dashboard routes  
+router.get("/dashboard", verifyToken, getUserDashboard);
+router.get("/orders", verifyToken, getUserOrders);
+router.get("/:userId/orders", verifyToken, getOrdersByUser); // Get orders by user ID
 
 // Admin-only user management routes
 router.get("/", verifyToken, isAdmin, getAllUsers); // GET /api/users
